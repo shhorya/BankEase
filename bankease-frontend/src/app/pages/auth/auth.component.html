@@ -1,0 +1,40 @@
+<div class="auth-shell">
+  <div class="auth-brand">
+    <h1>BankEase</h1>
+    <p>Modern net banking built for clarity and speed — transfers, balances and history in one calm, focused place.</p>
+  </div>
+  <div class="auth-form-wrap">
+    <div class="auth-form">
+      <h2>{{ mode === 'login' ? 'Welcome back' : 'Create your account' }}</h2>
+      <p class="sub">{{ mode === 'login' ? 'Log in to your BankEase account' : 'Takes less than a minute' }}</p>
+
+      <div class="field" *ngIf="mode === 'register'">
+        <label>Full name</label>
+        <input [(ngModel)]="fullName" placeholder="Jordan Blake">
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input [(ngModel)]="email" type="email" placeholder="you@email.com">
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input [(ngModel)]="password" type="password" placeholder="••••••••">
+      </div>
+      <div class="field" *ngIf="mode === 'register'">
+        <label>Phone number</label>
+        <input [(ngModel)]="phoneNumber" maxlength="10" placeholder="10-digit number">
+      </div>
+
+      <div class="errmsg" *ngIf="error">{{ error }}</div>
+
+      <button class="btn-primary" (click)="submit()" [disabled]="loading">
+        {{ loading ? 'Please wait...' : (mode === 'login' ? 'Log in' : 'Create account') }}
+      </button>
+
+      <p class="switch-auth">
+        {{ mode === 'login' ? "New here?" : "Already have an account?" }}
+        <a (click)="toggleMode()">{{ mode === 'login' ? 'Create an account' : 'Log in' }}</a>
+      </p>
+    </div>
+  </div>
+</div>  

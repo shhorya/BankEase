@@ -1,0 +1,16 @@
+.auth-shell{position:fixed;inset:0;display:flex;background:var(--bg)}
+.auth-brand{flex:1;background:linear-gradient(155deg,#0A2540,#123a68 60%,#1a4a86);display:flex;flex-direction:column;justify-content:center;padding:60px;color:#fff}
+.auth-brand h1{font-size:2.6rem;margin:0 0 12px;font-weight:700}
+.auth-brand p{color:#B9C6DC;max-width:380px;line-height:1.6}
+.auth-form-wrap{flex:1;display:flex;align-items:center;justify-content:center;padding:40px}
+.auth-form{width:100%;max-width:380px}
+.auth-form h2{font-size:1.5rem;margin:0 0 6px}
+.sub{color:var(--muted);margin:0 0 26px;font-size:.92rem}
+.field{margin-bottom:15px}
+.field label{display:block;font-size:.8rem;margin-bottom:6px;color:var(--muted)}
+.field input{width:100%;padding:11px 14px;border-radius:var(--r-sm);border:1.5px solid var(--border);font-size:.94rem}
+.field input:focus{outline:none;border-color:var(--blue)}
+.errmsg{color:var(--red);font-size:.82rem;margin-bottom:12px}
+.switch-auth{text-align:center;margin-top:16px;font-size:.87rem;color:var(--muted)}
+.switch-auth a{color:var(--blue);cursor:pointer;font-weight:600}
+@media(max-width:860px){.auth-brand{display:none}}

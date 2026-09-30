@@ -1,0 +1,48 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="logo-row">BankEase</div>
+    <div class="side-bottom">
+      <button (click)="logout()">Sign out</button>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="profile">{{ auth.currentUser()?.fullName }}</div>
+    </div>
+
+    <div class="content" *ngIf="!loading; else loadingTpl">
+      <div class="banner-err" *ngIf="error">{{ error }}</div>
+
+      <div class="card">
+        <div class="lbl">Total balance</div>
+        <div class="bal-amt">{{ fmt(totalBalance) }}</div>
+        <div class="acc-count">Across {{ accounts.length }} active account(s)</div>
+      </div>
+
+      <div class="acc-list">
+        <div class="acc-mini" *ngFor="let a of accounts">
+          <div class="r1"><span>{{ a.accountType }}</span><span>•••• {{ a.accountNumber.slice(-4) }}</span></div>
+          <div class="bal">{{ fmt(a.balance) }}</div>
+          <span class="badge">{{ a.status }}</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Recent Transactions</h3>
+        <div class="txn-row" *ngFor="let t of transactions">
+          <div class="txn-mid">
+            <div class="t1">{{ t.description }}</div>
+            <div class="t2">{{ t.createdAt | date:'d MMM, h:mm a' }}</div>
+          </div>
+          <div class="txn-amt" [class.in]="isCredit(t.transactionType)">
+            {{ isCredit(t.transactionType) ? '+' : '-' }}{{ fmt(t.amount) }}
+          </div>
+        </div>
+        <div class="empty" *ngIf="!transactions.length">No transactions yet</div>
+      </div>
+    </div>
+
+    <ng-template #loadingTpl><div class="empty">Loading...</div></ng-template>
+  </div>
+</div>

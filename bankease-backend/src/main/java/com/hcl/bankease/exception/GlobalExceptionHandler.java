@@ -55,6 +55,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(errors);
     }
 
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleDenied(org.springframework.security.access.AccessDeniedException ex) {
+        return buildResponse(ex.getMessage(), HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
         return buildResponse("An unexpected error occurred: " + ex.getMessage(),

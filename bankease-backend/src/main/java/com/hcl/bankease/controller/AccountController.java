@@ -30,28 +30,33 @@ public class AccountController {
     }
 
     @GetMapping("/{accountNumber}")
-    public ResponseEntity<AccountResponse> getAccount(@PathVariable String accountNumber) {
+    public ResponseEntity<AccountResponse> getAccount(@PathVariable String accountNumber, Authentication auth) {
+        accountService.assertOwner(accountNumber, auth.getName());
         return ResponseEntity.ok(accountService.getAccountByNumber(accountNumber));
     }
 
     @GetMapping("/{accountNumber}/transactions")
     public ResponseEntity<List<TransactionResponse>> getTransactionHistory(
-            @PathVariable String accountNumber) {
+            @PathVariable String accountNumber, Authentication auth) {
+        accountService.assertOwner(accountNumber, auth.getName());
         return ResponseEntity.ok(accountService.getTransactionHistory(accountNumber));
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<TransactionResponse> transfer(@Valid @RequestBody TransferRequest request) {
+    public ResponseEntity<TransactionResponse> transfer(@Valid @RequestBody TransferRequest request, Authentication auth) {
+        accountService.assertOwner(request.getFromAccountNumber(), auth.getName());
         return ResponseEntity.ok(accountService.transfer(request));
     }
 
     @PostMapping("/deposit")
-    public ResponseEntity<TransactionResponse> deposit(@Valid @RequestBody DepositWithdrawRequest request) {
+    public ResponseEntity<TransactionResponse> deposit(@Valid @RequestBody DepositWithdrawRequest request, Authentication auth) {
+        accountService.assertOwner(request.getAccountNumber(), auth.getName());
         return ResponseEntity.ok(accountService.deposit(request));
     }
 
     @PostMapping("/withdraw")
-    public ResponseEntity<TransactionResponse> withdraw(@Valid @RequestBody DepositWithdrawRequest request) {
+    public ResponseEntity<TransactionResponse> withdraw(@Valid @RequestBody DepositWithdrawRequest request, Authentication auth) {
+        accountService.assertOwner(request.getAccountNumber(), auth.getName());
         return ResponseEntity.ok(accountService.withdraw(request));
     }
 }

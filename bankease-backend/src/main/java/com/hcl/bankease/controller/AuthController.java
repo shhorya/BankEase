@@ -21,6 +21,7 @@ public class AuthController {
     private final UserService userService;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final com.hcl.bankease.service.AuditService audit;
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -41,14 +42,19 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        userService.assertNotLocked(request.getEmail());
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
             );
         } catch (Exception e) {
+            userService.recordFailure(request.getEmail());
+            audit.log(request.getEmail(), "LOGIN_FAILED", null);
             throw new BadCredentialsException("Invalid email or password");
         }
 
+        userService.recordSuccess(request.getEmail());
+        audit.log(request.getEmail(), "LOGIN", null);
         User user = userService.findByEmail(request.getEmail());
         String token = jwtService.generateToken(user.getEmail());
 

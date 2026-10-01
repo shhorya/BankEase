@@ -1,40 +1,51 @@
-<div class="auth-shell">
+<div id="auth">
   <div class="auth-brand">
     <h1>BankEase</h1>
-    <p>Modern net banking built for clarity and speed — transfers, balances and history in one calm, focused place.</p>
+    <p>Modern net banking built for clarity and speed — balances, transfers and history, all in one calm, focused place.</p>
   </div>
   <div class="auth-form-wrap">
     <div class="auth-form">
       <h2>{{ mode === 'login' ? 'Welcome back' : 'Create your account' }}</h2>
       <p class="sub">{{ mode === 'login' ? 'Log in to your BankEase account' : 'Takes less than a minute' }}</p>
 
-      <div class="field" *ngIf="mode === 'register'">
-        <label>Full name</label>
-        <input [(ngModel)]="fullName" placeholder="Jordan Blake">
-      </div>
-      <div class="field">
+      @if (mode === 'register') {
+        <div class="field" [class.err]="submitted && !fullName.trim()">
+          <label>Full name</label>
+          <input [(ngModel)]="fullName" placeholder="Aarav Rao">
+          <div class="errmsg">Name required</div>
+        </div>
+      }
+      <div class="field" [class.err]="submitted && !emailOk">
         <label>Email</label>
         <input [(ngModel)]="email" type="email" placeholder="you@email.com">
+        <div class="errmsg">Enter a valid email</div>
       </div>
-      <div class="field">
+      <div class="field" [class.err]="submitted && !passOk">
         <label>Password</label>
-        <input [(ngModel)]="password" type="password" placeholder="••••••••">
+        <input [(ngModel)]="password" type="password" [placeholder]="mode === 'login' ? '••••••••' : 'Min. 8 characters'" (keyup.enter)="submit()">
+        @if (mode === 'register') {
+          <div class="strength"><div class="strength-bar" [style.width.%]="strengthPct" [style.background]="strengthColor"></div></div>
+        }
+        <div class="errmsg">{{ mode === 'login' ? 'Password required' : 'Min. 8 characters' }}</div>
       </div>
-      <div class="field" *ngIf="mode === 'register'">
-        <label>Phone number</label>
-        <input [(ngModel)]="phoneNumber" maxlength="10" placeholder="10-digit number">
-      </div>
+      @if (mode === 'register') {
+        <div class="field" [class.err]="submitted && !phoneOk">
+          <label>Phone number</label>
+          <input [(ngModel)]="phoneNumber" maxlength="10" placeholder="10-digit number">
+          <div class="errmsg">Must be 10 digits</div>
+        </div>
+      }
 
-      <div class="errmsg" *ngIf="error">{{ error }}</div>
+      @if (error) { <div class="form-err">{{ error }}</div> }
 
       <button class="btn-primary" (click)="submit()" [disabled]="loading">
         {{ loading ? 'Please wait...' : (mode === 'login' ? 'Log in' : 'Create account') }}
       </button>
 
       <p class="switch-auth">
-        {{ mode === 'login' ? "New here?" : "Already have an account?" }}
+        {{ mode === 'login' ? 'New here?' : 'Already have an account?' }}
         <a (click)="toggleMode()">{{ mode === 'login' ? 'Create an account' : 'Log in' }}</a>
       </p>
     </div>
   </div>
-</div>  
+</div>

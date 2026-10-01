@@ -50,6 +50,36 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
     }
 
+    public void assertNotLocked(String email) {
+        userRepository.findByEmail(email).ifPresent(u -> {
+            if (u.getLockedUntil() != null && u.getLockedUntil().isAfter(java.time.LocalDateTime.now())) {
+                throw new org.springframework.security.authentication.BadCredentialsException(
+                        "Account locked for 15 minutes due to failed logins");
+            }
+        });
+    }
+
+    @Transactional
+    public void recordFailure(String email) {
+        userRepository.findByEmail(email).ifPresent(u -> {
+            u.setFailedAttempts(u.getFailedAttempts() + 1);
+            if (u.getFailedAttempts() >= 5) {
+                u.setLockedUntil(java.time.LocalDateTime.now().plusMinutes(15));
+                u.setFailedAttempts(0);
+            }
+            userRepository.save(u);
+        });
+    }
+
+    @Transactional
+    public void recordSuccess(String email) {
+        userRepository.findByEmail(email).ifPresent(u -> {
+            u.setFailedAttempts(0);
+            u.setLockedUntil(null);
+            userRepository.save(u);
+        });
+    }
+
     public boolean verifyPassword(String rawPassword, String hashedPassword) {
         return passwordEncoder.matches(rawPassword, hashedPassword);
     }

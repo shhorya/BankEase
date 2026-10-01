@@ -57,8 +57,11 @@ public class AccountService {
             throw new IllegalArgumentException("Cannot transfer to the same account");
         }
 
-        Account fromAccount = findAccountOrThrow(request.getFromAccountNumber());
-        Account toAccount = findAccountOrThrow(request.getToAccountNumber());
+        String a = request.getFromAccountNumber(), b = request.getToAccountNumber();
+        Account l1 = findForUpdateOrThrow(a.compareTo(b) < 0 ? a : b);
+        Account l2 = findForUpdateOrThrow(a.compareTo(b) < 0 ? b : a);
+        Account fromAccount = l1.getAccountNumber().equals(a) ? l1 : l2;
+        Account toAccount = fromAccount == l1 ? l2 : l1;
 
         if (fromAccount.getStatus() != Account.AccountStatus.ACTIVE) {
             throw new IllegalStateException("Source account is not active");
@@ -116,7 +119,7 @@ public class AccountService {
 
     @Transactional
     public TransactionResponse deposit(DepositWithdrawRequest request) {
-        Account account = findAccountOrThrow(request.getAccountNumber());
+        Account account = findForUpdateOrThrow(request.getAccountNumber());
         if (account.getStatus() != Account.AccountStatus.ACTIVE) {
             throw new IllegalStateException("Account is not active");
         }
@@ -139,6 +142,11 @@ public class AccountService {
 
     @Transactional
     public TransactionResponse withdraw(DepositWithdrawRequest request) {
+        return debit(request, Transaction.TransactionType.WITHDRAWAL);
+    }
+
+    @Transactional
+    public TransactionResponse debit(DepositWithdrawRequest request, Transaction.TransactionType type) {
         Account account = findAccountOrThrow(request.getAccountNumber());
         if (account.getStatus() != Account.AccountStatus.ACTIVE) {
             throw new IllegalStateException("Account is not active");
@@ -153,7 +161,7 @@ public class AccountService {
 
         Transaction txn = Transaction.builder()
                 .account(account)
-                .transactionType(Transaction.TransactionType.WITHDRAWAL)
+                .transactionType(type)
                 .amount(request.getAmount())
                 .balanceAfter(account.getBalance())
                 .description(request.getDescription())
@@ -162,6 +170,19 @@ public class AccountService {
         transactionRepository.save(txn);
 
         return toTransactionResponse(txn);
+    }
+
+    @Transactional(readOnly = true)
+    public void assertOwner(String accountNumber, String email) {
+        Account a = findAccountOrThrow(accountNumber);
+        if (!a.getUser().getEmail().equals(email)) {
+            throw new org.springframework.security.access.AccessDeniedException("Not your account");
+        }
+    }
+
+    private Account findForUpdateOrThrow(String n) {
+        return accountRepository.findForUpdate(n)
+                .orElseThrow(() -> new ResourceNotFoundException("Account not found: " + n));
     }
 
     private Account findAccountOrThrow(String accountNumber) {

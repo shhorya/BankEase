@@ -1,0 +1,44 @@
+CREATE TABLE audit_logs (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_email VARCHAR(150),
+    action VARCHAR(100) NOT NULL,
+    details VARCHAR(255),
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE billers (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL
+) ENGINE=InnoDB;
+
+INSERT INTO billers (name, category) VALUES
+ ('City Electricity','ELECTRICITY'),('Jio Mobile','MOBILE'),
+ ('Airtel Broadband','INTERNET'),('Water Board','WATER');
+
+CREATE TABLE loans (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    account_number VARCHAR(20) NOT NULL,
+    principal DECIMAL(15,2) NOT NULL,
+    tenure_months INT NOT NULL,
+    interest_rate DECIMAL(5,2) NOT NULL,
+    emi DECIMAL(15,2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_loans_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+CREATE TABLE investments (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    type VARCHAR(20) NOT NULL,
+    amount DECIMAL(15,2) NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE',
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_inv_user FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB;
+
+ALTER TABLE users
+    ADD COLUMN failed_attempts INT NOT NULL DEFAULT 0,
+    ADD COLUMN locked_until TIMESTAMP NULL DEFAULT NULL;

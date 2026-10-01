@@ -1,48 +1,274 @@
-<div class="shell">
-  <aside class="sidebar">
-    <div class="logo-row">BankEase</div>
-    <div class="side-bottom">
-      <button (click)="logout()">Sign out</button>
-    </div>
-  </aside>
+<div id="toasts">@for (m of toasts; track $index) { <div class="toast show">{{ m }}</div> }</div>
 
-  <div class="main">
-    <div class="topbar">
-      <div class="profile">{{ auth.currentUser()?.fullName }}</div>
-    </div>
-
-    <div class="content" *ngIf="!loading; else loadingTpl">
-      <div class="banner-err" *ngIf="error">{{ error }}</div>
-
-      <div class="card">
-        <div class="lbl">Total balance</div>
-        <div class="bal-amt">{{ fmt(totalBalance) }}</div>
-        <div class="acc-count">Across {{ accounts.length }} active account(s)</div>
-      </div>
-
-      <div class="acc-list">
-        <div class="acc-mini" *ngFor="let a of accounts">
-          <div class="r1"><span>{{ a.accountType }}</span><span>•••• {{ a.accountNumber.slice(-4) }}</span></div>
-          <div class="bal">{{ fmt(a.balance) }}</div>
-          <span class="badge">{{ a.status }}</span>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>Recent Transactions</h3>
-        <div class="txn-row" *ngFor="let t of transactions">
-          <div class="txn-mid">
-            <div class="t1">{{ t.description }}</div>
-            <div class="t2">{{ t.createdAt | date:'d MMM, h:mm a' }}</div>
-          </div>
-          <div class="txn-amt" [class.in]="isCredit(t.transactionType)">
-            {{ isCredit(t.transactionType) ? '+' : '-' }}{{ fmt(t.amount) }}
-          </div>
-        </div>
-        <div class="empty" *ngIf="!transactions.length">No transactions yet</div>
-      </div>
-    </div>
-
-    <ng-template #loadingTpl><div class="empty">Loading...</div></ng-template>
+<aside class="sidebar" [class.collapsed]="collapsed">
+  <div class="logo-row"><div class="logo-badge"><i class="ic" [innerHTML]="ic('bank')"></i></div><span class="logo-text">BankEase</span></div>
+  <nav class="side-nav">
+    @for (n of nav; track n.id) {
+      <button class="nav-item" [class.active]="page === n.id" (click)="navTo(n.id)">
+        <i class="ic" [innerHTML]="ic(n.icon)"></i><span>{{ n.label }}</span>
+      </button>
+    }
+  </nav>
+  <div class="side-bottom">
+    <button class="collapse-btn" (click)="collapsed = !collapsed"><i class="ic" [innerHTML]="ic('menu')"></i></button>
+    <button class="signout" (click)="auth.logout()"><i class="ic" [innerHTML]="ic('logout')"></i><span>Sign out</span></button>
   </div>
+</aside>
+
+<div class="main" [class.collapsed]="collapsed">
+  <div class="topbar">
+    <div class="search"><i class="ic" [innerHTML]="ic('search')"></i><input [(ngModel)]="q" placeholder="Search transactions..."></div>
+    <div class="topbar-right">
+      <button class="icon-btn" (click)="toast('Need help? support@bankease.com')"><i class="ic" [innerHTML]="ic('help')"></i></button>
+      <button class="icon-btn" (click)="toggleTheme()"><i class="ic" [innerHTML]="ic('moon')"></i></button>
+      <button class="icon-btn" (click)="go('activity')"><i class="ic" [innerHTML]="ic('bell')"></i></button>
+      <div class="profile">
+        <div class="avatar">{{ firstName.charAt(0).toUpperCase() }}</div>
+        <div><div class="pname">{{ firstName }}</div><div class="prole">{{ role }}</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+    @if (loading) { <div class="empty">Loading...</div> } @else {
+      @if (error) { <div class="banner-err show">{{ error }}</div> }
+
+      @if (page === 'dashboard') {
+        <section class="page active">
+          <div class="page-head">
+            <div><div class="date">{{ today }}</div><h1>{{ greet }}, {{ firstName }}</h1><p>Here's your financial overview.</p></div>
+            <button class="btn-cta" (click)="openDrawer('Transfer')"><i class="ic" [innerHTML]="ic('plus')"></i><span>New transaction</span></button>
+          </div>
+          <div class="hero-grid">
+            <div class="card">
+              <div class="lbl" style="font-size:.8rem;color:var(--muted)">Total balance</div>
+              <div class="bal-amt-row"><div class="bal-amt">₹{{ whole(totalBalance) }}<span class="cents">.{{ cents(totalBalance) }}</span></div></div>
+              <div class="acc-count">Across {{ accounts.length }} active accounts</div>
+              <div class="range-tabs">
+                @for (r of ranges; track r.d) { <button [class.active]="range === r.d" (click)="range = r.d">{{ r.l }}</button> }
+              </div>
+              <div class="chart-wrap">
+                <svg width="100%" height="160" viewBox="0 0 600 160" preserveAspectRatio="none">
+                  <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563EB" stop-opacity=".22"/><stop offset="100%" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs>
+                  <path [attr.d]="chart.area" fill="url(#g1)"/>
+                  <path [attr.d]="chart.line" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="dark-panel">
+              <div class="bal-top"><div><div class="lbl">My accounts</div><h2>Your money, organized.</h2></div><button class="viewall" (click)="go('accounts')">View all</button></div>
+              <div class="acc-stack">
+                @for (a of accounts; track a.id; let i = $index) {
+                  <div class="acc-mini" [class.a1]="i % 2 === 0" [class.a2]="i % 2 === 1" (click)="pick(a)">
+                    <div class="r1"><span>{{ a.accountType | titlecase }}</span><span>•••• {{ a.accountNumber.slice(-4) }}</span></div>
+                    <div class="r2"><div><div style="font-size:.65rem;color:rgba(255,255,255,.6)">Available balance</div><div class="bal">{{ fmt(a.balance) }}</div></div><span class="badge">{{ a.status }}</span></div>
+                  </div>
+                }
+              </div>
+              <div class="dark-actions"><button class="b1" (click)="openDrawer('Transfer')">Transfer</button><button class="b2" (click)="openDrawer('Deposit')">Deposit</button></div>
+            </div>
+          </div>
+          <div class="stat-row">
+            <div class="card stat-card"><div class="r1"><span class="lbl">This month's activity</span><div class="stat-icn g"><i class="ic" [innerHTML]="ic('trend')"></i></div></div><div class="stat-val">{{ fmt(monthTotal) }}</div><div class="stat-trend g">{{ transactions.length }} <span>transactions on this account</span></div></div>
+            <div class="card stat-card"><div class="r1"><span class="lbl">Pending loans</span><div class="stat-icn a"><i class="ic" [innerHTML]="ic('clock')"></i></div></div><div class="stat-val">{{ fmt(pendingSum) }}</div><div class="stat-trend a">{{ pendingLoans.length }} <span>awaiting approval</span></div></div>
+            <div class="card stat-card"><div class="r1"><span class="lbl">Total spent</span><div class="stat-icn b"><i class="ic" [innerHTML]="ic('trend')"></i></div></div><div class="stat-val">{{ fmt(spent) }}</div><div class="stat-trend b">Debits <span>on this account</span></div></div>
+          </div>
+        </section>
+      }
+
+      @if (page === 'dashboard' || page === 'transactions') {
+        <section class="page active">
+          @if (page === 'transactions') {
+            <div class="page-head"><div><div class="date">Activity</div><h1>Transaction history</h1><p>Every deposit, withdrawal and transfer, in one place.</p></div></div>
+          }
+          <div class="act-grid" [style.margin-top.px]="page === 'transactions' ? 0 : 20">
+            <div class="card">
+              <div class="act-head"><div><div class="lbl">Activity</div><h3>Recent transactions</h3></div>
+                @if (page === 'dashboard') { <button class="link" (click)="go('transactions')">View all</button> }</div>
+              <div class="pills">
+                @for (f of filters; track f.v) { <button class="pill" [class.active]="filter === f.v" (click)="filter = f.v">{{ f.l }}</button> }
+              </div>
+              <div class="txn-list">
+                @for (t of list; track t.id) {
+                  <div class="txn-row" [class.selected]="selTx?.id === t.id" (click)="selTx = t">
+                    <div class="txn-icon" [class.in]="isCredit(t.transactionType)" [class.out]="!isCredit(t.transactionType)" [innerHTML]="ic(isCredit(t.transactionType) ? 'in' : 'out')"></div>
+                    <div class="txn-mid"><div class="t1">{{ t.description || t.transactionType }}</div><div class="t2">{{ t.createdAt | date:'d MMM, h:mm a' }}</div></div>
+                    <div class="txn-r"><div class="txn-amt" [class.in]="isCredit(t.transactionType)">{{ isCredit(t.transactionType) ? '+' : '-' }}{{ fmt(t.amount) }}</div><div [class]="'status-pill ' + t.status">{{ t.status }}</div></div>
+                  </div>
+                }
+                @if (!list.length) { <div class="empty">No transactions match. Make a deposit to get started.</div> }
+              </div>
+            </div>
+            <div class="card detail-card">
+              <div class="act-head"><div><div class="lbl">Selected transaction</div><h3>Transaction details</h3></div></div>
+              @if (selTx) {
+                <div class="detail-dark">
+                  <div class="dd-top">
+                    <div class="txn-icon" style="background:rgba(255,255,255,.12);color:#fff" [innerHTML]="ic(isCredit(selTx.transactionType) ? 'in' : 'out')"></div>
+                    <div [class]="'status-pill ' + selTx.status">{{ selTx.status }}</div>
+                  </div>
+                  <div class="dd-title">{{ selTx.description || selTx.transactionType }}</div>
+                  <div class="dd-amt">{{ isCredit(selTx.transactionType) ? '+' : '-' }}{{ fmt(selTx.amount) }}</div>
+                  <div class="dd-desc">{{ selTx.transactionType.replace('_', ' ') }}</div>
+                  <div class="dd-grid">
+                    <div><div class="k">Transaction ID</div><div class="v">TX-{{ selTx.id }}</div></div>
+                    <div><div class="k">Balance after</div><div class="v">{{ fmt(selTx.balanceAfter) }}</div></div>
+                    <div><div class="k">Date &amp; time</div><div class="v">{{ selTx.createdAt | date:'d MMM y, h:mm a' }}</div></div>
+                    <div><div class="k">Account</div><div class="v">{{ curAcc?.accountType }}</div></div>
+                  </div>
+                </div>
+                @if (page === 'dashboard') { <button class="viewfull" (click)="go('transactions')">View full transaction history</button> }
+              } @else { <div class="empty">Select a transaction to see full details</div> }
+            </div>
+          </div>
+        </section>
+      }
+
+      @if (page === 'accounts') {
+        <section class="page active">
+          <div class="page-head"><div><div class="date">Accounts</div><h1>Your accounts</h1><p>Everything you hold with BankEase.</p></div></div>
+          <div class="hero-grid" style="grid-template-columns:1fr 1fr">
+            @for (a of accounts; track a.id) {
+              <div class="dark-panel">
+                <div class="bal-top"><div><div class="lbl">{{ a.accountType }}</div><h2>{{ a.accountNumber }}</h2></div><span class="badge">{{ a.status }}</span></div>
+                <div style="margin-top:24px"><div class="lbl">Available balance</div><div style="font-size:1.8rem;font-weight:700;margin-top:6px">{{ fmt(a.balance) }}</div></div>
+                <div class="dark-actions"><button class="b1" (click)="pick(a); openDrawer('Transfer')">Transfer</button><button class="b2" (click)="pick(a); openDrawer('Deposit')">Deposit</button></div>
+              </div>
+            }
+          </div>
+        </section>
+      }
+
+      @if (page === 'bills' || page === 'loans' || page === 'invest') {
+        <section class="page active">
+          <div class="page-head"><div><div class="date">Services</div>
+            <h1>{{ page === 'bills' ? 'Pay bills' : page === 'loans' ? 'Loans' : 'Invest' }}</h1>
+            <p>{{ page === 'bills' ? 'Pay your utilities in seconds.' : page === 'loans' ? 'Apply at 10.5% p.a. Up to ₹5,00,000 is approved instantly.' : 'Grow your savings with FD, SIP or mutual funds.' }}</p></div></div>
+          <div class="card fcard">
+            <label class="flbl" style="margin-top:0">From account</label>
+            <select class="fi" [(ngModel)]="selAcc" (change)="loadTxns(selAcc)">
+              @for (a of accounts; track a.id) { <option [value]="a.accountNumber">{{ a.accountType }} {{ a.accountNumber }} - {{ fmt(a.balance) }}</option> }
+            </select>
+            @if (page === 'bills') {
+              <select class="fi" [(ngModel)]="billerId">
+                <option [ngValue]="null">Select biller</option>
+                @for (b of billers; track b.id) { <option [ngValue]="b.id">{{ b.name }} ({{ b.category }})</option> }
+              </select>
+              <input class="fi" type="number" [(ngModel)]="amount" placeholder="Amount">
+              <button class="btn-primary" (click)="payBill()">Pay bill</button>
+            }
+            @if (page === 'loans') {
+              <input class="fi" type="number" [(ngModel)]="amount" placeholder="Loan amount (min 1000)">
+              <input class="fi" type="number" [(ngModel)]="tenure" placeholder="Tenure in months (3-120)">
+              <button class="btn-primary" (click)="applyLoan()">Apply for loan</button>
+            }
+            @if (page === 'invest') {
+              <select class="fi" [(ngModel)]="invType">
+                <option value="FD">Fixed Deposit</option><option value="SIP">SIP</option><option value="MUTUAL_FUND">Mutual Fund</option>
+              </select>
+              <input class="fi" type="number" [(ngModel)]="amount" placeholder="Amount (min 100)">
+              <button class="btn-primary" (click)="invest()">Invest</button>
+            }
+          </div>
+
+          @if (page === 'loans') {
+            <div class="card" style="max-width:720px;margin-bottom:20px">
+              <h3>My loans</h3>
+              @for (l of loans; track l.id) {
+                <div class="txn-row" style="cursor:default"><div class="txn-mid"><div class="t1">Loan #{{ l.id }} · {{ fmt(l.principal) }}</div><div class="t2">EMI {{ fmt(l.emi) }} × {{ l.tenure_months }} months</div></div><div [class]="'status-pill ' + (l.status === 'APPROVED' ? 'SUCCESS' : 'PENDING')">{{ l.status }}</div></div>
+              }
+              @if (!loans.length) { <div class="empty">No loans yet. Apply above.</div> }
+            </div>
+            @if (isAdmin) {
+              <div class="card" style="max-width:720px">
+                <h3>Pending approvals</h3>
+                @for (l of pending; track l.id) {
+                  <div class="txn-row" style="cursor:default"><div class="txn-mid"><div class="t1">Loan #{{ l.id }} · {{ fmt(l.principal) }}</div><div class="t2">{{ l.account_number }}</div></div><button class="link" (click)="approve(l.id)">Approve</button></div>
+                }
+                @if (!pending.length) { <div class="empty">Nothing pending</div> }
+              </div>
+            }
+          }
+          @if (page === 'invest') {
+            <div class="card" style="max-width:720px">
+              <h3>My investments</h3>
+              @for (i of investments; track i.id) {
+                <div class="txn-row" style="cursor:default"><div class="txn-mid"><div class="t1">{{ i.type }}</div><div class="t2">{{ i.created_at | date:'d MMM y' }}</div></div><div class="txn-amt">{{ fmt(i.amount) }}</div></div>
+              }
+              @if (!investments.length) { <div class="empty">No investments yet</div> }
+            </div>
+          }
+        </section>
+      }
+
+      @if (page === 'activity') {
+        <section class="page active">
+          <div class="page-head"><div><div class="date">Security</div><h1>Activity log</h1><p>Every login and money action on your account.</p></div></div>
+          <div class="card" style="max-width:820px">
+            @for (a of audit; track $index) {
+              <div class="txn-row" style="cursor:default"><div class="txn-mid"><div class="t1">{{ a.action }}</div><div class="t2">{{ a.details }}</div></div><div class="t2">{{ a.created_at | date:'d MMM, h:mm a' }}</div></div>
+            }
+            @if (!audit.length) { <div class="empty">No activity yet</div> }
+          </div>
+        </section>
+      }
+    }
+  </div>
+
+  <div class="mobile-nav">
+    @for (n of nav.slice(0, 4); track n.id) {
+      <button [class.active]="page === n.id" (click)="navTo(n.id)"><i class="ic" [innerHTML]="ic(n.icon)"></i>{{ n.label === 'Transaction history' ? 'History' : n.label }}</button>
+    }
+  </div>
+</div>
+
+<div class="overlay" [class.show]="drawer" (click)="closeDrawer()"></div>
+<div class="drawer" [class.show]="drawer">
+  <div class="drawer-head">
+    <div><div class="lbl">BankEase actions</div><h2>{{ mode }}</h2></div>
+    <button class="icon-btn" (click)="closeDrawer()"><i class="ic" [innerHTML]="ic('close')"></i></button>
+  </div>
+  <div class="drawer-body">
+    @if (step === 'done') {
+      <div class="success-state">
+        <svg class="check" viewBox="0 0 52 52"><circle cx="26" cy="26" r="24"/><path d="M14 27l7 7 17-17"/></svg>
+        <h3>Request submitted</h3><p style="color:var(--muted);margin-top:6px">Your {{ mode.toLowerCase() }} was successful</p>
+      </div>
+    } @else {
+      <div class="mode-tabs">
+        @for (m of modes; track m) { <button [class.active]="mode === m" (click)="mode = m; step = 'form'; drawErr = ''">{{ m }}</button> }
+      </div>
+      @if (drawErr) { <div class="banner-err show">{{ drawErr }}</div> }
+      @if (step === 'form') {
+        <label class="flbl" style="margin-top:0">Amount</label>
+        <div class="amt-input"><span>₹</span><input type="number" [(ngModel)]="amount" placeholder="0.00"></div>
+        <div class="preview">New balance will be <b>{{ fmt(newBal) }}</b></div>
+        <label class="flbl">From account</label>
+        <select class="acc-select" [(ngModel)]="selAcc" (change)="loadTxns(selAcc)">
+          @for (a of accounts; track a.id) { <option [value]="a.accountNumber">{{ a.accountType }} · {{ a.accountNumber }}</option> }
+        </select>
+        @if (mode === 'Transfer') {
+          <label class="flbl">To account number</label>
+          <input class="acc-select" [(ngModel)]="toAcc" placeholder="e.g. AC123456789">
+        }
+        <label class="flbl">Description (optional)</label>
+        <input class="acc-select" [(ngModel)]="desc" placeholder="What is this for?">
+      } @else {
+        <div class="review-box">
+          <div class="rlbl">Please review your request</div>
+          <div class="ramt">{{ fmt(amount || 0) }}</div>
+          <div class="review-row"><span>Type</span><span>{{ mode }}</span></div>
+          <div class="review-row"><span>Account</span><span>{{ selAcc }}</span></div>
+          @if (mode === 'Transfer') { <div class="review-row"><span>To</span><span>{{ toAcc }}</span></div> }
+          <div class="review-row"><span>New balance</span><span>{{ fmt(newBal) }}</span></div>
+        </div>
+      }
+    }
+  </div>
+  @if (step !== 'done') {
+    <div class="drawer-foot">
+      <button class="btn-primary" (click)="step === 'form' ? review() : submit()">{{ step === 'form' ? 'Continue' : 'Confirm securely' }}</button>
+      <p>Transactions are protected with bank-grade encryption</p>
+    </div>
+  }
 </div>

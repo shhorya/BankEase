@@ -147,7 +147,7 @@ public class AccountService {
 
     @Transactional
     public TransactionResponse debit(DepositWithdrawRequest request, Transaction.TransactionType type) {
-        Account account = findAccountOrThrow(request.getAccountNumber());
+        Account account = findForUpdateOrThrow(request.getAccountNumber());
         if (account.getStatus() != Account.AccountStatus.ACTIVE) {
             throw new IllegalStateException("Account is not active");
         }

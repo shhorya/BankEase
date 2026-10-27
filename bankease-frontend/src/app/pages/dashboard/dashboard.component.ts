@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -122,13 +122,16 @@ export class DashboardComponent implements OnInit {
   toast(m: string) { this.toasts.push(m); setTimeout(() => this.toasts.shift(), 2600); }
   toggleTheme() {
     const h = document.documentElement;
-    h.setAttribute('data-theme', h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+    const next = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    h.setAttribute('data-theme', next);
+    localStorage.setItem('theme', next);
   }
 
   // ---- drawer ----
   openDrawer(m: string) {
     this.mode = m; this.step = 'form'; this.drawErr = ''; this.amount = null; this.desc = ''; this.toAcc = ''; this.drawer = true;
   }
+  @HostListener('document:keydown.escape')
   closeDrawer() { this.drawer = false; }
   review() {
     const a = Number(this.amount) || 0; this.drawErr = '';
@@ -173,6 +176,19 @@ export class DashboardComponent implements OnInit {
   invest() { this.run(this.http.post(`${this.api}/investments`, { accountNumber: this.selAcc, type: this.invType, amount: Number(this.amount) }), 'Investment successful'); }
 
   isCredit(t: string) { return t === 'DEPOSIT' || t === 'TRANSFER_IN'; }
+
+  exportCsv() {
+    const rows = [['ID', 'Type', 'Amount', 'Balance After', 'Description', 'Status', 'Date'],
+      ...this.shown.map(t => [t.id, t.transactionType, t.amount, t.balanceAfter,
+        (t.description || '').replace(/,/g, ' '), t.status, t.createdAt])];
+    const blob = new Blob([rows.map(r => r.join(',')).join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `statement-${this.selAcc}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    this.toast('Statement downloaded');
+  }
   fmt(n: number) { return '₹' + Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   whole(n: number) { return Math.floor(n).toLocaleString('en-IN'); }
   cents(n: number) { return n.toFixed(2).split('.')[1]; }

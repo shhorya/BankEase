@@ -220,7 +220,8 @@ nav.side-nav{flex:1;padding:20px 12px 0;display:flex;flex-direction:column;gap:4
 
 #toasts{position:fixed;top:20px;right:20px;z-index:60;display:flex;flex-direction:column;gap:8px}
 .toast{background:var(--navy);color:#fff;padding:13px 18px;border-radius:12px;font-size:.83rem;box-shadow:0 10px 26px rgba(0,0,0,.25);transform:translateX(130%);transition:transform .3s}
-.toast.show{transform:translateX(0)}
+.toast.show{transform:translateX(0);animation:toastin .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes toastin{from{transform:translateX(130%);opacity:0}to{transform:translateX(0);opacity:1}}
 
 @media(max-width:960px){
   .hero-grid,.act-grid{grid-template-columns:1fr}
@@ -252,3 +253,35 @@ nav.side-nav{flex:1;padding:20px 12px 0;display:flex;flex-direction:column;gap:4
 .fcard h3,.card h3{margin:0 0 14px;font-size:1.02rem}
 .fcard .btn-primary{margin-top:4px}
 .muted{color:var(--muted);font-size:.78rem;margin:10px 0 0}
+
+@media(max-width:960px){
+  .mobile-nav{overflow-x:auto;justify-content:flex-start;gap:4px;scrollbar-width:none}
+  .mobile-nav::-webkit-scrollbar{display:none}
+  .mobile-nav button{flex-shrink:0;white-space:nowrap}
+}
+/* ===== Animation pack ===== */
+.txn-row:nth-child(1){animation-delay:.03s}.txn-row:nth-child(2){animation-delay:.08s}
+.txn-row:nth-child(3){animation-delay:.13s}.txn-row:nth-child(4){animation-delay:.18s}
+.txn-row:nth-child(n+5){animation-delay:.22s}
+
+.card,.dark-panel,.stat-card{transition:transform .25s ease,box-shadow .25s ease}
+.card:hover,.dark-panel:hover{transform:translateY(-3px);box-shadow:0 14px 30px rgba(10,37,64,.10)}
+.btn-primary,.btn-cta,.pill,.range-tabs button,.mode-tabs button{transition:transform .15s,background .2s,color .2s,box-shadow .2s}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed}
+
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:drawline 1.2s ease forwards}
+@keyframes drawline{to{stroke-dashoffset:0}}
+
+.drawer-body>*{animation:stepin .35s ease both}
+@keyframes stepin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.field{animation:stepin .35s ease both}
+.page-head,.stat-card,.acc-mini{animation:stepin .5s ease both}
+.stat-card:nth-child(2){animation-delay:.08s}.stat-card:nth-child(3){animation-delay:.16s}
+
+.skel{height:84px;border-radius:var(--r);margin-bottom:16px;background:linear-gradient(90deg,var(--border) 25%,var(--card) 50%,var(--border) 75%);background-size:200% 100%;animation:shimmer 1.3s infinite linear}
+@keyframes shimmer{to{background-position:-200% 0}}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}

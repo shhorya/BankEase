@@ -30,7 +30,7 @@
   </div>
 
   <div class="content">
-    @if (loading) { <div class="empty">Loading...</div> } @else {
+    @if (loading) { <div class="skel"></div><div class="skel"></div><div class="skel"></div> } @else {
       @if (error) { <div class="banner-err show">{{ error }}</div> }
 
       @if (page === 'dashboard') {
@@ -51,7 +51,7 @@
                 <svg width="100%" height="160" viewBox="0 0 600 160" preserveAspectRatio="none">
                   <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563EB" stop-opacity=".22"/><stop offset="100%" stop-color="#2563EB" stop-opacity="0"/></linearGradient></defs>
                   <path [attr.d]="chart.area" fill="url(#g1)"/>
-                  <path [attr.d]="chart.line" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
+                  <path class="draw" pathLength="1" [attr.d]="chart.line" fill="none" stroke="#2563EB" stroke-width="2.5" stroke-linecap="round"/>
                 </svg>
               </div>
             </div>
@@ -79,7 +79,8 @@
       @if (page === 'dashboard' || page === 'transactions') {
         <section class="page active">
           @if (page === 'transactions') {
-            <div class="page-head"><div><div class="date">Activity</div><h1>Transaction history</h1><p>Every deposit, withdrawal and transfer, in one place.</p></div></div>
+            <div class="page-head"><div><div class="date">Activity</div><h1>Transaction history</h1><p>Every deposit, withdrawal and transfer, in one place.</p></div>
+            <button class="btn-cta" (click)="exportCsv()"><i class="ic" [innerHTML]="ic('file')"></i><span>Export CSV</span></button></div>
           }
           <div class="act-grid" [style.margin-top.px]="page === 'transactions' ? 0 : 20">
             <div class="card">
@@ -146,7 +147,7 @@
             <p>{{ page === 'bills' ? 'Pay your utilities in seconds.' : page === 'loans' ? 'Apply at 10.5% p.a. Up to ₹5,00,000 is approved instantly.' : 'Grow your savings with FD, SIP or mutual funds.' }}</p></div></div>
           <div class="card fcard">
             <label class="flbl" style="margin-top:0">From account</label>
-            <select class="fi" [(ngModel)]="selAcc" (change)="loadTxns(selAcc)">
+            <select class="fi" [ngModel]="selAcc" (ngModelChange)="selAcc = $event; loadTxns($event)">
               @for (a of accounts; track a.id) { <option [value]="a.accountNumber">{{ a.accountType }} {{ a.accountNumber }} - {{ fmt(a.balance) }}</option> }
             </select>
             @if (page === 'bills') {
@@ -216,7 +217,7 @@
   </div>
 
   <div class="mobile-nav">
-    @for (n of nav.slice(0, 4); track n.id) {
+    @for (n of nav; track n.id) {
       <button [class.active]="page === n.id" (click)="navTo(n.id)"><i class="ic" [innerHTML]="ic(n.icon)"></i>{{ n.label === 'Transaction history' ? 'History' : n.label }}</button>
     }
   </div>
@@ -244,7 +245,7 @@
         <div class="amt-input"><span>₹</span><input type="number" [(ngModel)]="amount" placeholder="0.00"></div>
         <div class="preview">New balance will be <b>{{ fmt(newBal) }}</b></div>
         <label class="flbl">From account</label>
-        <select class="acc-select" [(ngModel)]="selAcc" (change)="loadTxns(selAcc)">
+        <select class="acc-select" [ngModel]="selAcc" (ngModelChange)="selAcc = $event; loadTxns($event)">
           @for (a of accounts; track a.id) { <option [value]="a.accountNumber">{{ a.accountType }} · {{ a.accountNumber }}</option> }
         </select>
         @if (mode === 'Transfer') {

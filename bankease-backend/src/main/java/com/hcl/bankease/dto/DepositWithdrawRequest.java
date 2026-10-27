@@ -17,5 +17,6 @@ public class DepositWithdrawRequest {
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
     private BigDecimal amount;
 
+    @jakarta.validation.constraints.Size(max = 255, message = "Description max 255 characters")
     private String description;
 }

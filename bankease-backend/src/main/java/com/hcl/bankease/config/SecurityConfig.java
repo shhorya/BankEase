@@ -49,7 +49,7 @@ public DaoAuthenticationProvider authenticationProvider() {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:4200")); // Angular dev server
+        config.setAllowedOrigins(List.of("http://localhost:4200", "http://127.0.0.1:4200")); // Angular dev server
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);

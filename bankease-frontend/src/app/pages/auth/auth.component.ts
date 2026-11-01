@@ -15,6 +15,8 @@ export class AuthComponent {
   mode: 'login' | 'register' = 'login';
   loading = false; error = ''; submitted = false;
   fullName = ''; email = ''; password = ''; phoneNumber = '';
+  demo = { email: 'demo@bankease.com', password: 'Demo@12345' };
+  useDemo() { this.email = this.demo.email; this.password = this.demo.password; }
 
   constructor(private auth: AuthService, private router: Router) {}
 
@@ -33,14 +35,14 @@ export class AuthComponent {
       this.loading = true;
       this.auth.login({ email: this.email, password: this.password }).subscribe({
         next: () => { this.loading = false; this.router.navigate(['/dashboard']); },
-        error: (e) => { this.loading = false; this.error = e.error?.message || 'Invalid email or password'; }
+        error: (e) => { this.loading = false; this.error = e.status === 0 ? 'Cannot reach the server. Is the backend running?' : (e.error?.message || 'Login failed. Please try again.'); }
       });
     } else {
       if (!this.fullName.trim() || !this.emailOk || !this.passOk || !this.phoneOk) return;
       this.loading = true;
       this.auth.register({ fullName: this.fullName, email: this.email, password: this.password, phoneNumber: this.phoneNumber }).subscribe({
         next: () => { this.loading = false; this.router.navigate(['/dashboard']); },
-        error: (e) => { this.loading = false; this.error = e.error?.message || 'Registration failed'; }
+        error: (e) => { this.loading = false; this.error = e.status === 0 ? 'Cannot reach the server. Is the backend running?' : (e.error?.message || 'Registration failed. Please try again.'); }
       });
     }
   }

@@ -46,6 +46,10 @@
         {{ mode === 'login' ? 'New here?' : 'Already have an account?' }}
         <a (click)="toggleMode()">{{ mode === 'login' ? 'Create an account' : 'Log in' }}</a>
       </p>
+      <p class="demo-hint" *ngIf="mode === 'login'">
+  Demo login: <b>{{ demo.email }}</b> / <b>{{ demo.password }}</b>
+  <a href="#" (click)="useDemo(); $event.preventDefault()">Use it</a>
+</p>
     </div>
   </div>
 </div>

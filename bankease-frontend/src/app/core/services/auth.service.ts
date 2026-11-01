@@ -27,7 +27,7 @@ export class AuthService {
 
   private loadUser(): AuthResponse | null {
     const raw = localStorage.getItem('user');
-    return raw ? JSON.parse(raw) : null;
+    try { return raw ? JSON.parse(raw) : null; } catch { return null; }
   }
 
   getToken(): string | null { return localStorage.getItem('token'); }
